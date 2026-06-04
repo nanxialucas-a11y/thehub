@@ -53,6 +53,11 @@
             margin-top: 10px;
         }
 
+        .back {
+            margin-bottom: 40px;
+            display: inline-block;
+        }
+
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -66,11 +71,23 @@
             padding: 25px;
             box-shadow: 0 0 25px rgba(139, 92, 246, 0.15);
             transition: 0.2s;
+
+            display: flex;
+            flex-direction: column;
         }
 
         .card:hover {
             transform: translateY(-4px);
             box-shadow: 0 0 30px rgba(139, 92, 246, 0.25);
+        }
+
+        .card img {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(139, 92, 246, 0.2);
         }
 
         .card h2 {
@@ -82,11 +99,12 @@
         .card p {
             color: #cccccc;
             line-height: 1.5;
+            margin-bottom: 15px;
         }
 
         .button {
             display: inline-block;
-            margin-top: 15px;
+            margin-top: auto;
             padding: 10px 18px;
             border: 1px solid #8b5cf6;
             border-radius: 8px;
@@ -99,11 +117,6 @@
             background: #8b5cf6;
             color: #09090b;
             box-shadow: 0 0 15px #8b5cf6;
-        }
-
-        .back {
-            margin-bottom: 40px;
-            display: inline-block;
         }
     </style>
 </head>
@@ -125,39 +138,79 @@
         <section class="grid">
 
             <div class="card">
+                <img src="/images/games/polytrackthumbnail.webp" alt="PolyTrack">
                 <h2>PolyTrack</h2>
-                <p>
-                    low poly racing game, a classic
-                </p>
-
+                <p>low poly racing game, a classic</p>
                 <a href="/games/polytrack/" class="button">play</a>
             </div>
 
             <div class="card">
+                <img src="/images/games/ovothumbnail.webp" alt="OvO">
                 <h2>OvO</h2>
-                <p>
-                    fun lightweight platformer
-                </p>
-
+                <p>fun lightweight platformer</p>
                 <a href="/games/ovo/" class="button">play</a>
             </div>
 
             <div class="card">
-                <h2>rocket league</h2>
-                <p>
-                    car soccer game
-                </p>
-
+                <img src="/images/games/rocketleaguethumbnail.webp" alt="Rocket League">
+                <h2>Rocket League</h2>
+                <p>car soccer game</p>
                 <a href="/games/rocketleague/" class="button">play</a>
             </div>
 
             <div class="card">
-                <h2>geometry dash lite</h2>
-                <p>
-                    a smaller version of geometry dash
-                </p>
+                <img src="/images/games/gdlitethumbnail.webp" alt="Geometry Dash Lite">
+                <h2>Geometry Dash Lite</h2>
+                <p>a smaller version of geometry dash</p>
+                <a href="/games/gdlite/" class="button">play</a>
+            </div>
 
-                <a href="/games/gdlite" class="button">play</a>
+            <div class="card">
+                <h2>???</h2>
+                <p>more games soon</p>
+                <a href="#" class="button">coming soon</a>
+            </div>
+
+            <div class="card">
+                <h2>???</h2>
+                <p>more games soon</p>
+                <a href="#" class="button">coming soon</a>
+            </div>
+
+            <div class="card">
+                <h2>???</h2>
+                <p>more games soon</p>
+                <a href="#" class="button">coming soon</a>
+            </div>
+
+            <div class="card">
+                <h2>???</h2>
+                <p>more games soon</p>
+                <a href="#" class="button">coming soon</a>
+            </div>
+
+            <div class="card">
+                <h2>???</h2>
+                <p>more games soon</p>
+                <a href="#" class="button">coming soon</a>
+            </div>
+
+            <div class="card">
+                <h2>???</h2>
+                <p>more games soon</p>
+                <a href="#" class="button">coming soon</a>
+            </div>
+
+            <div class="card">
+                <h2>???</h2>
+                <p>more games soon</p>
+                <a href="#" class="button">coming soon</a>
+            </div>
+
+            <div class="card">
+                <h2>???</h2>
+                <p>more games soon</p>
+                <a href="#" class="button">coming soon</a>
             </div>
 
         </section>
