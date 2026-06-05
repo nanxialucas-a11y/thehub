@@ -1,70 +1,288 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <title>Static Proxy</title>
-    <meta name="description" content="Ultraviolet is a highly sophisticated proxy used for evading internet censorship or accessing websites in a controlled sandbox using the power of service-workers. Unblock sites today!" />
-    <meta name="keywords" content="proxy, web proxy, ultraviolet, service workers, unblock websites, unblock chromebook, free web proxy, proxy list, proxy sites, un block chromebook, online proxy, proxy server, proxysite, proxy youtube, bypass securly, bypass iboss, bypass lightspeed filter, holy unblocker, chromebooks, titanium network, unblock youtube, youtube proxy, unblocked youtube, youtube unblocked">
-    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#434c5e">
-    <meta name="googlebot" content="index, follow, snippet" />
-    <link rel="stylesheet" href="index.css">
-</script>
-<body onload = "showAlert()" >
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phyro</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root { --bg: #fff; --fg: #000; --muted: #888; --border: #e0e0e0; --hover: #f5f5f5; }
+  body { background: var(--bg); color: var(--fg); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+  #topbar { display: flex; align-items: center; height: 46px; padding: 0 12px; border-bottom: 1px solid var(--border); gap: 10px; flex-shrink: 0; }
+  #home-btn { font-size: 14px; font-weight: 800; letter-spacing: -0.5px; background: none; border: none; cursor: pointer; color: var(--fg); padding: 4px 6px; border-radius: 5px; flex-shrink: 0; }
+  #home-btn:hover { background: var(--hover); }
+  .nav-btn { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 16px; width: 28px; height: 28px; border-radius: 5px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .nav-btn:hover { background: var(--hover); color: var(--fg); }
+  .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  #url-wrap { flex: 1; display: flex; align-items: center; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; max-width: 680px; }
+  #url-wrap:focus-within { border-color: var(--fg); }
+  #url-input { flex: 1; border: none; outline: none; padding: 8px 12px; font-size: 13px; font-family: inherit; background: transparent; color: var(--fg); }
+  #url-input::placeholder { color: var(--muted); }
+  #go-btn { background: var(--fg); color: var(--bg); border: none; padding: 8px 14px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; }
+  #go-btn:hover { opacity: 0.75; }
+  #content { flex: 1; position: relative; overflow: hidden; }
+  #home-page { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
+  #home-page h1 { font-size: 52px; font-weight: 800; letter-spacing: -3px; }
+  #home-search { display: flex; border: 1.5px solid var(--fg); border-radius: 10px; overflow: hidden; width: 100%; max-width: 500px; }
+  #home-input { flex: 1; border: none; outline: none; padding: 13px 16px; font-size: 15px; font-family: inherit; background: transparent; }
+  #home-input::placeholder { color: var(--muted); }
+  #home-go { background: var(--fg); color: var(--bg); border: none; padding: 13px 22px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; }
+  #home-go:hover { opacity: 0.8; }
+  .shortcuts { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; max-width: 500px; }
+  .sc { font-size: 12px; color: var(--muted); background: none; border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px; cursor: pointer; font-family: inherit; }
+  .sc:hover { border-color: var(--fg); color: var(--fg); }
+  #proxy-view { position: absolute; inset: 0; display: none; }
+  #proxy-view.active { display: block; }
+  #proxy-frame { width: 100%; height: 100%; border: none; background: white; }
+  #status-overlay { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 12px; background: var(--bg); z-index: 10; }
+  #status-overlay.active { display: flex; }
+  .spinner { width: 22px; height: 22px; border: 2px solid var(--border); border-top-color: var(--fg); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #status-msg { font-size: 13px; color: var(--muted); }
+  #status-detail { font-size: 12px; color: var(--muted); max-width: 380px; text-align: center; line-height: 1.6; }
+  #retry-btn { background: var(--fg); color: var(--bg); border: none; border-radius: 6px; padding: 8px 16px; font-size: 13px; font-family: inherit; cursor: pointer; display: none; }
+  #retry-btn:hover { opacity: 0.75; }
+</style>
 </head>
-
 <body>
-<br><br><br>
-<br><br>
-<br><br>
-    </div>
-    <div class="desc">
-        <h1 class="title">Static Proxy</h1><br><br>
-    </div>
-<br>
-    <form>
-        <input class="search-input" placeholder="Search the web freely...">
-    </form>
-    <div class="text-center">
-   <button>About:Blank</button>
-<script>
-    var urlObj = new window.URL(window.location.href);
-    var url = "/index.html";
- 
-    if (url) {
-        var win;
- 
-        document.querySelector('button').onclick = function() {
-            if (win) {
-                win.focus();
-            } 
-            else {
-                win = window.open();
-                win.document.body.style.margin = '0';
-                win.document.body.style.height = '100vh';
-                var iframe = win.document.createElement('iframe');
-                iframe.style.border = 'none';
-                iframe.style.width = '100%';
-                iframe.style.height = '100%';
-                iframe.style.margin = '0';
-                iframe.src = url;
-                win.document.body.appendChild(iframe);
-                location.replace("https://lms.fcps.edu/home");
-            }
-        };
-    }
-</script>
-<style>*{color:white;font-family:arial;text-align:center}button{width:220px;height:40px;border-radius:12px;background-color:#080808;font-family:Arial,Helvetica,sans-serif;border:none;transition:background-color 500ms}button:hover{background-color:#080808}</style>
+<div id="topbar">
+  <button id="home-btn">phyro</button>
+  <button class="nav-btn" id="back-btn" disabled>&#8592;</button>
+  <button class="nav-btn" id="fwd-btn" disabled>&#8594;</button>
+  <button class="nav-btn" id="refresh-btn">&#8635;</button>
+  <div id="url-wrap">
+    <input id="url-input" type="text" placeholder="Search or enter URL" autocomplete="off" spellcheck="false">
+    <button id="go-btn">Go</button>
   </div>
-<br>
-    <div>
-    <footer style="bottom: 0; position: fixed;">
-        <p>&copy; CarbonNetwork</p>
-    </footer></div>
-    <script src="uv/uv.bundle.js"></script>
-    <script src="uv/uv.config.js"></script>
-    <script src="index.js"></script>
-</body>
+</div>
+<div id="content">
+  <div id="home-page">
+    <h1>phyro</h1>
+    <div id="home-search">
+      <input id="home-input" type="text" placeholder="Search or enter a URL…" autocomplete="off">
+      <button id="home-go">Go</button>
+    </div>
+    <div class="shortcuts">
+      <button class="sc" onclick="go('google.com')">Google</button>
+      <button class="sc" onclick="go('youtube.com')">YouTube</button>
+      <button class="sc" onclick="go('reddit.com')">Reddit</button>
+      <button class="sc" onclick="go('wikipedia.org')">Wikipedia</button>
+      <button class="sc" onclick="go('github.com')">GitHub</button>
+      <button class="sc" onclick="go('itch.io')">itch.io</button>
+      <button class="sc" onclick="go('discord.com')">Discord</button>
+      <button class="sc" onclick="go('x.com')">X / Twitter</button>
+    </div>
+  </div>
+  <div id="proxy-view">
+    <iframe id="proxy-frame" sandbox="allow-scripts allow-forms allow-popups allow-top-navigation-by-user-activation allow-same-origin"></iframe>
+  </div>
+  <div id="status-overlay">
+    <div class="spinner" id="spinner"></div>
+    <div id="status-msg">Loading…</div>
+    <div id="status-detail"></div>
+    <button id="retry-btn" onclick="go(currentUrl)">Retry</button>
+  </div>
+</div>
+<script>
+// ── CHANGE THIS to your Vercel URL if using your own proxy ──
+// Or leave as a public CORS proxy for a standalone file with no backend
+const CORS_PROXIES = [
+  'https://corsproxy.io/?url=',
+  'https://api.allorigins.win/raw?url=',
+  'https://thingproxy.freeboard.io/fetch/',
+];
+let proxyIndex = 0;
+function PROXY(url) {
+  return CORS_PROXIES[proxyIndex] + encodeURIComponent(url);
+}
 
+let currentUrl = '';
+let blobUrl = null;
+const nav_stack = [];
+let nav_index = -1;
+
+function parseInput(raw) {
+  raw = (raw || '').trim();
+  if (!raw) return null;
+  if (!raw.includes('.') || raw.includes(' '))
+    return 'https://www.google.com/search?q=' + encodeURIComponent(raw);
+  if (!/^https?:\/\//i.test(raw)) raw = 'https://' + raw;
+  return raw;
+}
+
+function go(input) {
+  const url = parseInput(input ||
+    document.getElementById('home-input').value ||
+    document.getElementById('url-input').value);
+  if (!url) return;
+  currentUrl = url;
+  document.getElementById('url-input').value = url;
+  nav_stack.splice(nav_index + 1);
+  nav_stack.push(url);
+  nav_index = nav_stack.length - 1;
+  updateNavBtns();
+  load(url);
+}
+window.go = go;
+
+function load(url) {
+  showStatus('loading', 'Loading…', '');
+  fetch(PROXY(url))
+    .then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      var ct = r.headers.get('content-type') || '';
+      if (!ct.includes('text/html') && !ct.includes('text/plain')) {
+        window.open(PROXY(url), '_blank');
+        showHome();
+        return Promise.reject('non-html');
+      }
+      return r.text();
+    })
+    .then(function(html) {
+      render(html, url);
+    })
+    .catch(function(err) {
+      if (err === 'non-html') return;
+      // Auto-try next proxy
+      if (proxyIndex < CORS_PROXIES.length - 1) {
+        proxyIndex++;
+        load(url);
+        return;
+      }
+      showStatus('error', 'Failed to load', 'All proxies failed. The site may block proxying, or check your network.');
+    });
+}
+
+function render(html, baseUrl) {
+  // Inject base tag, strip CSP, patch fetch/XHR/clicks
+  html = html.replace(/<base[^>]*>/gi, '');
+  html = html.replace(/<meta[^>]+http-equiv=["']?content-security-policy["']?[^>]*\/?>/gi, '');
+
+  // Build the proxy list as a JSON string to embed in the page
+  var proxiesJson = JSON.stringify(CORS_PROXIES);
+
+  var patch = '<base href="' + baseUrl + '">\n<script>(function(){'
+    + 'var PROXIES=' + proxiesJson + ';'
+    + 'var pi=0;'
+    + 'function px(u){return PROXIES[pi]+encodeURIComponent(u);}'
+    + 'var BASE="' + baseUrl.replace(/"/g,'\\"') + '";'
+    + 'function abs(u){try{return new URL(u,BASE).href;}catch(e){return u;}}'
+    + 'function skip(u){if(!u)return true;'
+    +   'for(var i=0;i<PROXIES.length;i++){if(u.startsWith(PROXIES[i]))return true;}'
+    +   'return u.startsWith("blob:")||u.startsWith("data:")||u.startsWith("javascript:");'
+    + '}'
+    // patch fetch
+    + 'var oF=window.fetch;'
+    + 'window.fetch=function(inp,init){'
+    +   'try{'
+    +     'var u=typeof inp==="string"?inp:(inp&&inp.url||"");'
+    +     'if(!skip(u)){var a=abs(u);if(a.startsWith("http")){inp=typeof inp==="string"?px(a):new Request(px(a),inp);}}'
+    +   '}catch(e){}'
+    +   'return oF(inp,init);'
+    + '};'
+    // patch XHR
+    + 'var oX=XMLHttpRequest.prototype.open;'
+    + 'XMLHttpRequest.prototype.open=function(m,u){'
+    +   'try{if(!skip(u)){var a=abs(u);if(a.startsWith("http"))u=px(a);}}catch(e){}'
+    +   'return oX.apply(this,[m,u].concat([].slice.call(arguments,2)));'
+    + '};'
+    // patch link clicks — go through parent
+    + 'document.addEventListener("click",function(e){'
+    +   'var a=e.target.closest("a");if(!a)return;'
+    +   'try{'
+    +     'var h=a.getAttribute("href");'
+    +     'if(!h||h.startsWith("#")||h.startsWith("javascript:"))return;'
+    +     'var ab=abs(h);'
+    +     'if(ab.startsWith("http")){e.preventDefault();window.parent.go(ab);}'
+    +   '}catch(e){}'
+    + '},true);'
+    // patch form submit
+    + 'document.addEventListener("submit",function(e){'
+    +   'try{'
+    +     'var f=e.target,ac=abs(f.action||location.href);'
+    +     'if(ac.startsWith("http")){'
+    +       'e.preventDefault();'
+    +       'if(f.method.toLowerCase()==="get"){'
+    +         'var q=new URLSearchParams(new FormData(f)).toString();'
+    +         'window.parent.go(ac+(ac.includes("?")?"&":"?")+q);'
+    +       '}'
+    +     '}'
+    +   '}catch(e){}'
+    + '},true);'
+    // silence errors & history
+    + 'window.addEventListener("error",function(e){e.stopImmediatePropagation();},true);'
+    + '["pushState","replaceState"].forEach(function(m){var o=history[m].bind(history);history[m]=function(){try{o.apply(this,arguments);}catch(e){}}; });'
+    + '})();<\/script>';
+
+  if (/<head[^>]*>/i.test(html)) {
+    html = html.replace(/<head([^>]*)>/i, '<head$1>' + patch);
+  } else {
+    html = '<head>' + patch + '</head>' + html;
+  }
+
+  if (blobUrl) URL.revokeObjectURL(blobUrl);
+  blobUrl = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+
+  var frame = document.getElementById('proxy-frame');
+  frame.src = blobUrl;
+  showProxy();
+
+  frame.onload = function() {
+    try {
+      var t = frame.contentDocument && frame.contentDocument.title;
+      if (t) document.title = t;
+    } catch(e) {}
+  };
+}
+
+function updateNavBtns() {
+  document.getElementById('back-btn').disabled = nav_index <= 0;
+  document.getElementById('fwd-btn').disabled = nav_index >= nav_stack.length - 1;
+}
+
+document.getElementById('back-btn').onclick = function() {
+  if (nav_index > 0) { nav_index--; var u = nav_stack[nav_index]; currentUrl = u; document.getElementById('url-input').value = u; updateNavBtns(); load(u); }
+};
+document.getElementById('fwd-btn').onclick = function() {
+  if (nav_index < nav_stack.length - 1) { nav_index++; var u = nav_stack[nav_index]; currentUrl = u; document.getElementById('url-input').value = u; updateNavBtns(); load(u); }
+};
+document.getElementById('refresh-btn').onclick = function() { if (currentUrl) load(currentUrl); };
+
+function showProxy() {
+  document.getElementById('home-page').style.display = 'none';
+  document.getElementById('status-overlay').classList.remove('active');
+  document.getElementById('proxy-view').classList.add('active');
+}
+function showHome() {
+  document.getElementById('home-page').style.display = '';
+  document.getElementById('proxy-view').classList.remove('active');
+  document.getElementById('status-overlay').classList.remove('active');
+  document.getElementById('url-input').value = '';
+  document.getElementById('home-input').value = '';
+  document.title = 'Phyro';
+  document.getElementById('proxy-frame').src = 'about:blank';
+  if (blobUrl) { URL.revokeObjectURL(blobUrl); blobUrl = null; }
+}
+function showStatus(type, msg, detail) {
+  document.getElementById('home-page').style.display = 'none';
+  document.getElementById('proxy-view').classList.remove('active');
+  var o = document.getElementById('status-overlay');
+  o.classList.add('active');
+  document.getElementById('status-msg').textContent = msg;
+  document.getElementById('status-detail').textContent = detail || '';
+  document.getElementById('spinner').style.display = type === 'loading' ? '' : 'none';
+  document.getElementById('retry-btn').style.display = type === 'error' ? '' : 'none';
+}
+
+document.getElementById('home-btn').onclick = showHome;
+document.getElementById('go-btn').onclick = function() { go(document.getElementById('url-input').value); };
+document.getElementById('home-go').onclick = function() { go(document.getElementById('home-input').value); };
+document.getElementById('url-input').addEventListener('keydown', function(e) { if (e.key === 'Enter') go(e.target.value); });
+document.getElementById('home-input').addEventListener('keydown', function(e) { if (e.key === 'Enter') go(e.target.value); });
+document.addEventListener('keydown', function(e) {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'l') { e.preventDefault(); document.getElementById('url-input').select(); }
+});
+document.getElementById('home-input').focus();
+</script>
+</body>
 </html>
