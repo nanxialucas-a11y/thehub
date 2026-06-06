@@ -30,3 +30,37 @@ document.body.insertAdjacentHTML("beforeend", `
   <audio id="audio-player"></audio>
 </div>
 `);
+const audio = document.getElementById("audio-player");
+const songTitle = document.getElementById("song-title");
+
+let currentSong = null;
+
+function loadRandomSong() {
+  currentSong = songs[Math.floor(Math.random() * songs.length)];
+
+  audio.src = currentSong.file;
+  songTitle.textContent = currentSong.title;
+}
+
+loadRandomSong();
+
+document.getElementById("play-btn").addEventListener("click", () => {
+  if (audio.paused) {
+    audio.play();
+    document.getElementById("play-btn").textContent = "⏸";
+  } else {
+    audio.pause();
+    document.getElementById("play-btn").textContent = "▶";
+  }
+});
+
+document.getElementById("next-btn").addEventListener("click", () => {
+  loadRandomSong();
+  audio.play();
+  document.getElementById("play-btn").textContent = "⏸";
+});
+
+audio.addEventListener("ended", () => {
+  loadRandomSong();
+  audio.play();
+});
