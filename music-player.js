@@ -18,13 +18,7 @@ document.body.insertAdjacentHTML("beforeend", `
     <button id="next-btn">random</button>
   </div>
 
-  <input
-    type="range"
-    id="music-progress"
-    value="0"
-    min="0"
-    max="100"
-  >
+  <input type="range" id="music-progress" value="0" min="0" max="100">
 
   <div id="music-time">
     <span id="current-time">0:00</span>
@@ -52,6 +46,8 @@ const controls = document.getElementById("music-controls");
 
 let currentSong = null;
 let isScrubbing = false;
+let allowProgressSave = true;
+let lastIndex = -1;
 
 // Restore player position
 const savedX = localStorage.getItem("musicPlayerX");
@@ -60,23 +56,32 @@ const savedY = localStorage.getItem("musicPlayerY");
 if (savedX && savedY) {
   player.style.left = savedX + "px";
   player.style.top = savedY + "px";
-
   player.style.right = "auto";
   player.style.bottom = "auto";
 }
 
-// Random song loader
-let lastIndex = -1;
+// FORMAT TIME
+function formatTime(seconds) {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
+}
 
+// GET SAVE KEY
+function getKey(song) {
+  return "music-progress-" + song.file;
+}
+
+// LOAD RANDOM SONG (no duplicate + safe saving control)
 function loadRandomSong() {
-  let index;
+  allowProgressSave = false;
 
+  let index;
   do {
     index = Math.floor(Math.random() * songs.length);
   } while (index === lastIndex && songs.length > 1);
 
   lastIndex = index;
-
   currentSong = songs[index];
 
   audio.src = currentSong.file;
@@ -85,15 +90,19 @@ function loadRandomSong() {
   audio.load();
 
   audio.addEventListener("loadedmetadata", () => {
-    const saved = localStorage.getItem("music-progress-" + currentSong.file);
+    const saved = localStorage.getItem(getKey(currentSong));
 
     if (saved !== null) {
       audio.currentTime = parseFloat(saved);
     }
+
+    allowProgressSave = true;
   }, { once: true });
+
+  playBtn.textContent = "play";
 }
 
-// Play/Pause
+// PLAY / PAUSE
 playBtn.addEventListener("click", () => {
   if (audio.paused) {
     audio.play();
@@ -104,31 +113,24 @@ playBtn.addEventListener("click", () => {
   }
 });
 
-// Next song
+// NEXT
 nextBtn.addEventListener("click", () => {
   loadRandomSong();
   audio.play();
   playBtn.textContent = "pause";
 });
 
-// Auto next
+// AUTO NEXT
 audio.addEventListener("ended", () => {
   loadRandomSong();
   audio.play();
 });
 
-// Time formatting
-function formatTime(seconds) {
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-
-  return `${mins}:${secs.toString().padStart(2, "0")}`;
-}
-
-// Update progress bar
+// PROGRESS UPDATE
 audio.addEventListener("timeupdate", () => {
   if (!audio.duration) return;
   if (isScrubbing) return;
+  if (!currentSong) return;
 
   progressBar.value =
     (audio.currentTime / audio.duration) * 100;
@@ -139,16 +141,21 @@ audio.addEventListener("timeupdate", () => {
   durationText.textContent =
     formatTime(audio.duration);
 
+  if (allowProgressSave) {
+    localStorage.setItem(
+      getKey(currentSong),
+      audio.currentTime
+    );
+  }
 });
 
-// Seek
+// SEEK
 progressBar.addEventListener("pointerdown", () => {
   isScrubbing = true;
 });
 
 progressBar.addEventListener("input", () => {
   if (!audio.duration) return;
-
   audio.currentTime =
     (progressBar.value / 100) * audio.duration;
 });
@@ -157,14 +164,13 @@ progressBar.addEventListener("pointerup", () => {
   isScrubbing = false;
 });
 
-// Dragging
+// DRAG
 let isDragging = false;
 let offsetX = 0;
 let offsetY = 0;
 
 header.addEventListener("mousedown", (e) => {
   isDragging = true;
-
   offsetX = e.clientX - player.offsetLeft;
   offsetY = e.clientY - player.offsetTop;
 });
@@ -195,7 +201,7 @@ document.addEventListener("mouseup", () => {
   isDragging = false;
 });
 
-// Minimize
+// MINIMIZE
 let minimized = false;
 
 minimizeBtn.addEventListener("click", () => {
@@ -214,18 +220,7 @@ minimizeBtn.addEventListener("click", () => {
   }
 });
 
-//Save when leaving site
-window.addEventListener("beforeunload", () => {
-  if (!currentSong) return;
-
-  localStorage.setItem("music-last-song", currentSong.file);
-  localStorage.setItem(
-    "music-progress-" + currentSong.file,
-    audio.currentTime
-  );
-});
-
-//Startup Control
+// STARTUP
 window.addEventListener("DOMContentLoaded", () => {
   const lastSong = localStorage.getItem("music-last-song");
 
@@ -234,24 +229,32 @@ window.addEventListener("DOMContentLoaded", () => {
 
     if (song) {
       currentSong = song;
+
       audio.src = song.file;
       songTitle.textContent = song.title;
 
       audio.load();
 
       audio.addEventListener("loadedmetadata", () => {
-        const saved = localStorage.getItem("music-progress-" + song.file);
+        const saved = localStorage.getItem(getKey(song));
 
         if (saved !== null) {
           audio.currentTime = parseFloat(saved);
         }
       }, { once: true });
 
-      playBtn.textContent = "pause";
-
+      playBtn.textContent = "play";
       return;
     }
   }
 
   loadRandomSong();
+});
+
+// SAVE ON LEAVE
+window.addEventListener("beforeunload", () => {
+  if (!currentSong) return;
+
+  localStorage.setItem("music-last-song", currentSong.file);
+  localStorage.setItem(getKey(currentSong), audio.currentTime);
 });
