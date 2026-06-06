@@ -87,9 +87,25 @@ document.addEventListener("mousemove", (e) => {
   player.style.right = "auto";
   player.style.bottom = "auto";
 });
-
 document.addEventListener("mouseup", () => {
   isDragging = false;
+});document.addEventListener("mousemove", (e) => {
+  if (!isDragging) return;
+
+  let x = e.clientX - offsetX;
+  let y = e.clientY - offsetY;
+
+  const maxX = window.innerWidth - player.offsetWidth;
+  const maxY = window.innerHeight - player.offsetHeight;
+
+  x = Math.max(0, Math.min(x, maxX));
+  y = Math.max(0, Math.min(y, maxY));
+
+  player.style.left = `${x}px`;
+  player.style.top = `${y}px`;
+
+  player.style.right = "auto";
+  player.style.bottom = "auto";
 });
 const minimizeBtn = document.getElementById("music-minimize");
 const controls = document.getElementById("music-controls");
