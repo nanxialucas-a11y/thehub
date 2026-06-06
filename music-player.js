@@ -14,8 +14,8 @@ document.body.insertAdjacentHTML("beforeend", `
   </div>
 
   <div id="music-controls">
-    <button id="play-btn">▶</button>
-    <button id="next-btn">🎲</button>
+    <button id="play-btn">play</button>
+    <button id="next-btn">random</button>
   </div>
 
   <input
