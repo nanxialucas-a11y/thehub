@@ -67,14 +67,18 @@ if (savedX && savedY) {
 
 // Random song loader
 function loadRandomSong() {
-  currentSong = songs[Math.floor(Math.random() * songs.length)];
+  let lastIndex = -1;
 
-  audio.src = currentSong.file;
-  songTitle.textContent = currentSong.title;
-}
+function loadRandomSong() {
+  let index;
 
-loadRandomSong();function loadRandomSong() {
-  currentSong = songs[Math.floor(Math.random() * songs.length)];
+  do {
+    index = Math.floor(Math.random() * songs.length);
+  } while (index === lastIndex && songs.length > 1);
+
+  lastIndex = index;
+
+  currentSong = songs[index];
 
   audio.src = currentSong.file;
   songTitle.textContent = currentSong.title;
@@ -94,7 +98,6 @@ loadRandomSong();function loadRandomSong() {
 playBtn.addEventListener("click", () => {
   if (audio.paused) {
     audio.play();
-    saveLastSong();
     playBtn.textContent = "pause";
   } else {
     audio.pause();
@@ -106,13 +109,11 @@ playBtn.addEventListener("click", () => {
 nextBtn.addEventListener("click", () => {
   loadRandomSong();
   audio.play();
-  saveLastSong();
   playBtn.textContent = "pause";
 });
 
 // Auto next
 audio.addEventListener("ended", () => {
-  saveLastSong();
   loadRandomSong();
   audio.play();
 });
@@ -123,20 +124,6 @@ function formatTime(seconds) {
   const secs = Math.floor(seconds % 60);
 
   return `${mins}:${secs.toString().padStart(2, "0")}`;
-}
-
-// Song progress saving
-function getProgressKey(song) {
-  return "music-progress-" + song.file;
-}
-
-function saveProgress() {
-  if (!currentSong || !audio.duration) return;
-
-  localStorage.setItem(
-    getProgressKey(currentSong),
-    audio.currentTime
-  );
 }
 
 // Update progress bar
@@ -153,16 +140,10 @@ audio.addEventListener("timeupdate", () => {
   durationText.textContent =
     formatTime(audio.duration);
 
-  saveProgress();  
 });
 
 // Seek
-progressBar.addEventListener("input", () => {
-  if (!audio.duration) return;
-
-  audio.currentTime =
-    (progressBar.value / 100) * audio.duration;
-});progressBar.addEventListener("pointerdown", () => {
+progressBar.addEventListener("pointerdown", () => {
   isScrubbing = true;
 });
 
@@ -234,9 +215,44 @@ minimizeBtn.addEventListener("click", () => {
   }
 });
 
-//Saves Last Song played
-function saveLastSong() {
+//Save when leaving site
+window.addEventListener("beforeunload", () => {
   if (!currentSong) return;
 
   localStorage.setItem("music-last-song", currentSong.file);
-}
+  localStorage.setItem(
+    "music-progress-" + currentSong.file,
+    audio.currentTime
+  );
+});
+
+//Startup Control
+window.addEventListener("DOMContentLoaded", () => {
+  const lastSong = localStorage.getItem("music-last-song");
+
+  if (lastSong) {
+    const song = songs.find(s => s.file === lastSong);
+
+    if (song) {
+      currentSong = song;
+      audio.src = song.file;
+      songTitle.textContent = song.title;
+
+      audio.load();
+
+      audio.addEventListener("loadedmetadata", () => {
+        const saved = localStorage.getItem("music-progress-" + song.file);
+
+        if (saved !== null) {
+          audio.currentTime = parseFloat(saved);
+        }
+      }, { once: true });
+
+      playBtn.textContent = "pause";
+
+      return;
+    }
+  }
+
+  loadRandomSong();
+});
