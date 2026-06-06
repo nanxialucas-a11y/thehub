@@ -66,8 +66,7 @@ if (savedX && savedY) {
 }
 
 // Random song loader
-function loadRandomSong() {
-  let lastIndex = -1;
+let lastIndex = -1;
 
 function loadRandomSong() {
   let index;
