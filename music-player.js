@@ -78,10 +78,10 @@ loadRandomSong();
 playBtn.addEventListener("click", () => {
   if (audio.paused) {
     audio.play();
-    playBtn.textContent = "⏸";
+    playBtn.textContent = "pause";
   } else {
     audio.pause();
-    playBtn.textContent = "▶";
+    playBtn.textContent = "play";
   }
 });
 
@@ -89,7 +89,7 @@ playBtn.addEventListener("click", () => {
 nextBtn.addEventListener("click", () => {
   loadRandomSong();
   audio.play();
-  playBtn.textContent = "⏸";
+  playBtn.textContent = "pause";
 });
 
 // Auto next
@@ -176,11 +176,11 @@ minimizeBtn.addEventListener("click", () => {
     controls.style.display = "none";
     progressBar.style.display = "none";
     document.getElementById("music-time").style.display = "none";
-    minimizeBtn.textContent = "+";
+    minimizeBtn.textContent = "expand";
   } else {
     controls.style.display = "flex";
     progressBar.style.display = "block";
     document.getElementById("music-time").style.display = "flex";
-    minimizeBtn.textContent = "−";
+    minimizeBtn.textContent = "minimize";
   }
 });
