@@ -15,7 +15,7 @@ document.body.insertAdjacentHTML("beforeend", `
 
   <div id="music-controls">
     <button id="play-btn">play</button>
-    <button id="next-btn">random</button>
+    <button id="next-btn">next</button>
   </div>
 
   <input type="range" id="music-progress" value="0" min="0" max="100">
@@ -45,64 +45,60 @@ const minimizeBtn = document.getElementById("music-minimize");
 const controls = document.getElementById("music-controls");
 
 let currentSong = null;
+let currentIndex = 0;
+
 let isScrubbing = false;
-let allowProgressSave = true;
-let lastIndex = -1;
+let isSwitching = false;
 
-// Restore player position
-const savedX = localStorage.getItem("musicPlayerX");
-const savedY = localStorage.getItem("musicPlayerY");
-
-if (savedX && savedY) {
-  player.style.left = savedX + "px";
-  player.style.top = savedY + "px";
-  player.style.right = "auto";
-  player.style.bottom = "auto";
-}
-
-// FORMAT TIME
-function formatTime(seconds) {
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs.toString().padStart(2, "0")}`;
-}
-
-// GET SAVE KEY
-function getKey(song) {
+// Save key helper
+function saveKey(song) {
   return "music-progress-" + song.file;
 }
 
-// LOAD RANDOM SONG (no duplicate + safe saving control)
-function loadRandomSong() {
-  allowProgressSave = false;
+// Time format
+function formatTime(seconds) {
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
 
-  let index;
-  do {
-    index = Math.floor(Math.random() * songs.length);
-  } while (index === lastIndex && songs.length > 1);
+// Load song (SAFE, no flicker, no accidental saving)
+function loadSong(index, resume = true) {
+  isSwitching = true;
 
-  lastIndex = index;
-  currentSong = songs[index];
+  currentIndex = index;
+  currentSong = songs[currentIndex];
 
-  audio.src = currentSong.file;
   songTitle.textContent = currentSong.title;
 
+  audio.pause();
+  audio.src = currentSong.file;
   audio.load();
 
-  audio.addEventListener("loadedmetadata", () => {
-    const saved = localStorage.getItem(getKey(currentSong));
+  playBtn.textContent = "play";
 
-    if (saved !== null) {
+  audio.addEventListener("loadedmetadata", () => {
+    const saved = localStorage.getItem(saveKey(currentSong));
+
+    if (resume && saved !== null) {
       audio.currentTime = parseFloat(saved);
     }
 
-    allowProgressSave = true;
+    isSwitching = false;
   }, { once: true });
-
-  playBtn.textContent = "play";
 }
 
-// PLAY / PAUSE
+// Next song (linear)
+nextBtn.addEventListener("click", () => {
+  let next = currentIndex + 1;
+  if (next >= songs.length) next = 0;
+
+  loadSong(next, false);
+  audio.play();
+  playBtn.textContent = "pause";
+});
+
+// Play / Pause
 playBtn.addEventListener("click", () => {
   if (audio.paused) {
     audio.play();
@@ -113,70 +109,60 @@ playBtn.addEventListener("click", () => {
   }
 });
 
-// NEXT
-nextBtn.addEventListener("click", () => {
-  loadRandomSong();
-  audio.play();
-  playBtn.textContent = "pause";
-});
-
-// AUTO NEXT
+// Auto next
 audio.addEventListener("ended", () => {
-  loadRandomSong();
+  let next = currentIndex + 1;
+  if (next >= songs.length) next = 0;
+
+  loadSong(next, false);
   audio.play();
 });
 
-// PROGRESS UPDATE
+// Progress update (stable + safe saving)
 audio.addEventListener("timeupdate", () => {
+  if (isSwitching) return;
   if (!audio.duration) return;
   if (isScrubbing) return;
-  if (!currentSong) return;
 
   progressBar.value =
     (audio.currentTime / audio.duration) * 100;
 
-  currentTimeText.textContent =
-    formatTime(audio.currentTime);
+  currentTimeText.textContent = formatTime(audio.currentTime);
+  durationText.textContent = formatTime(audio.duration);
 
-  durationText.textContent =
-    formatTime(audio.duration);
-
-  if (allowProgressSave) {
-    localStorage.setItem(
-      getKey(currentSong),
-      audio.currentTime
-    );
-  }
+  localStorage.setItem(
+    saveKey(currentSong),
+    audio.currentTime
+  );
 });
 
-// SEEK
+// Seek
 progressBar.addEventListener("pointerdown", () => {
   isScrubbing = true;
 });
 
 progressBar.addEventListener("input", () => {
   if (!audio.duration) return;
-  audio.currentTime =
-    (progressBar.value / 100) * audio.duration;
+  audio.currentTime = (progressBar.value / 100) * audio.duration;
 });
 
 progressBar.addEventListener("pointerup", () => {
   isScrubbing = false;
 });
 
-// DRAG
-let isDragging = false;
+// Dragging
+let dragging = false;
 let offsetX = 0;
 let offsetY = 0;
 
 header.addEventListener("mousedown", (e) => {
-  isDragging = true;
+  dragging = true;
   offsetX = e.clientX - player.offsetLeft;
   offsetY = e.clientY - player.offsetTop;
 });
 
 document.addEventListener("mousemove", (e) => {
-  if (!isDragging) return;
+  if (!dragging) return;
 
   let x = e.clientX - offsetX;
   let y = e.clientY - offsetY;
@@ -187,21 +173,18 @@ document.addEventListener("mousemove", (e) => {
   x = Math.max(0, Math.min(x, maxX));
   y = Math.max(0, Math.min(y, maxY));
 
-  player.style.left = `${x}px`;
-  player.style.top = `${y}px`;
-
-  player.style.right = "auto";
-  player.style.bottom = "auto";
+  player.style.left = x + "px";
+  player.style.top = y + "px";
 
   localStorage.setItem("musicPlayerX", x);
   localStorage.setItem("musicPlayerY", y);
 });
 
 document.addEventListener("mouseup", () => {
-  isDragging = false;
+  dragging = false;
 });
 
-// MINIMIZE
+// Minimize
 let minimized = false;
 
 minimizeBtn.addEventListener("click", () => {
@@ -220,41 +203,35 @@ minimizeBtn.addEventListener("click", () => {
   }
 });
 
-// STARTUP
+// Startup restore
 window.addEventListener("DOMContentLoaded", () => {
   const lastSong = localStorage.getItem("music-last-song");
 
   if (lastSong) {
-    const song = songs.find(s => s.file === lastSong);
+    const index = songs.findIndex(s => s.file === lastSong);
 
-    if (song) {
-      currentSong = song;
-
-      audio.src = song.file;
-      songTitle.textContent = song.title;
-
-      audio.load();
+    if (index !== -1) {
+      loadSong(index, false);
 
       audio.addEventListener("loadedmetadata", () => {
-        const saved = localStorage.getItem(getKey(song));
+        const saved = localStorage.getItem(saveKey(songs[index]));
 
         if (saved !== null) {
           audio.currentTime = parseFloat(saved);
         }
       }, { once: true });
 
-      playBtn.textContent = "play";
       return;
     }
   }
 
-  loadRandomSong();
+  loadSong(0, false);
 });
 
-// SAVE ON LEAVE
+// Save on exit
 window.addEventListener("beforeunload", () => {
   if (!currentSong) return;
 
   localStorage.setItem("music-last-song", currentSong.file);
-  localStorage.setItem(getKey(currentSong), audio.currentTime);
+  localStorage.setItem(saveKey(currentSong), audio.currentTime);
 });
