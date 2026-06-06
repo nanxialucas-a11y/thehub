@@ -64,3 +64,46 @@ audio.addEventListener("ended", () => {
   loadRandomSong();
   audio.play();
 });
+const player = document.getElementById("music-player");
+const header = document.getElementById("music-header");
+
+let isDragging = false;
+let offsetX = 0;
+let offsetY = 0;
+
+header.addEventListener("mousedown", (e) => {
+  isDragging = true;
+
+  offsetX = e.clientX - player.offsetLeft;
+  offsetY = e.clientY - player.offsetTop;
+});
+
+document.addEventListener("mousemove", (e) => {
+  if (!isDragging) return;
+
+  player.style.left = `${e.clientX - offsetX}px`;
+  player.style.top = `${e.clientY - offsetY}px`;
+
+  player.style.right = "auto";
+  player.style.bottom = "auto";
+});
+
+document.addEventListener("mouseup", () => {
+  isDragging = false;
+});
+const minimizeBtn = document.getElementById("music-minimize");
+const controls = document.getElementById("music-controls");
+
+let minimized = false;
+
+minimizeBtn.addEventListener("click", () => {
+  minimized = !minimized;
+
+  if (minimized) {
+    controls.style.display = "none";
+    minimizeBtn.textContent = "+";
+  } else {
+    controls.style.display = "flex";
+    minimizeBtn.textContent = "−";
+  }
+});
