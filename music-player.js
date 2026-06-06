@@ -10,7 +10,7 @@ document.body.insertAdjacentHTML("beforeend", `
 <div id="music-player">
   <div id="music-header">
     <span id="song-title">Loading...</span>
-    <button id="music-minimize">−</button>
+    <button id="music-minimize">minimize</button>
   </div>
 
   <div id="music-controls">
@@ -51,6 +51,7 @@ const minimizeBtn = document.getElementById("music-minimize");
 const controls = document.getElementById("music-controls");
 
 let currentSong = null;
+let isScrubbing = false;
 
 // Restore player position
 const savedX = localStorage.getItem("musicPlayerX");
@@ -72,12 +73,28 @@ function loadRandomSong() {
   songTitle.textContent = currentSong.title;
 }
 
-loadRandomSong();
+loadRandomSong();function loadRandomSong() {
+  currentSong = songs[Math.floor(Math.random() * songs.length)];
+
+  audio.src = currentSong.file;
+  songTitle.textContent = currentSong.title;
+
+  audio.load();
+
+  audio.addEventListener("loadedmetadata", () => {
+    const saved = localStorage.getItem("music-progress-" + currentSong.file);
+
+    if (saved !== null) {
+      audio.currentTime = parseFloat(saved);
+    }
+  }, { once: true });
+}
 
 // Play/Pause
 playBtn.addEventListener("click", () => {
   if (audio.paused) {
     audio.play();
+    saveLastSong();
     playBtn.textContent = "pause";
   } else {
     audio.pause();
@@ -89,11 +106,13 @@ playBtn.addEventListener("click", () => {
 nextBtn.addEventListener("click", () => {
   loadRandomSong();
   audio.play();
+  saveLastSong();
   playBtn.textContent = "pause";
 });
 
 // Auto next
 audio.addEventListener("ended", () => {
+  saveLastSong();
   loadRandomSong();
   audio.play();
 });
@@ -106,9 +125,24 @@ function formatTime(seconds) {
   return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
 
+// Song progress saving
+function getProgressKey(song) {
+  return "music-progress-" + song.file;
+}
+
+function saveProgress() {
+  if (!currentSong || !audio.duration) return;
+
+  localStorage.setItem(
+    getProgressKey(currentSong),
+    audio.currentTime
+  );
+}
+
 // Update progress bar
 audio.addEventListener("timeupdate", () => {
   if (!audio.duration) return;
+  if (isScrubbing) return;
 
   progressBar.value =
     (audio.currentTime / audio.duration) * 100;
@@ -118,6 +152,8 @@ audio.addEventListener("timeupdate", () => {
 
   durationText.textContent =
     formatTime(audio.duration);
+
+  saveProgress();  
 });
 
 // Seek
@@ -126,6 +162,19 @@ progressBar.addEventListener("input", () => {
 
   audio.currentTime =
     (progressBar.value / 100) * audio.duration;
+});progressBar.addEventListener("pointerdown", () => {
+  isScrubbing = true;
+});
+
+progressBar.addEventListener("input", () => {
+  if (!audio.duration) return;
+
+  audio.currentTime =
+    (progressBar.value / 100) * audio.duration;
+});
+
+progressBar.addEventListener("pointerup", () => {
+  isScrubbing = false;
 });
 
 // Dragging
@@ -184,3 +233,10 @@ minimizeBtn.addEventListener("click", () => {
     minimizeBtn.textContent = "minimize";
   }
 });
+
+//Saves Last Song played
+function saveLastSong() {
+  if (!currentSong) return;
+
+  localStorage.setItem("music-last-song", currentSong.file);
+}

@@ -68,6 +68,9 @@
 #music-progress {
   width: 100%;
   margin-top: 10px;
+  accent-color: #a855f7;
+  touch-action: none;
+  height: 6px;
 }
 
 #music-time {
