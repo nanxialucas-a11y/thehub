@@ -1,4 +1,175 @@
 (() => {
+  if (window.__musicPlayerLoaded) return;
+  window.__musicPlayerLoaded = true;
+
+  const songs = [
+    { title: "Rainy", file: "/music/rainy.mp3" },
+    { title: "Analog Morning", file: "/music/analogmorning.mp3" },
+    { title: "Wildflower", file: "/music/wildflower.mp3" }
+  ];
+
+  if (!document.getElementById("music-player")) {
+    document.body.insertAdjacentHTML("beforeend", `
+      <div id="music-player">
+        <div id="music-header">
+          <span id="song-title">Loading...</span>
+          <button id="music-minimize">minimize</button>
+        </div>
+
+        <div id="music-controls">
+          <button id="play-btn">play</button>
+          <button id="next-btn">next</button>
+        </div>
+
+        <input type="range" id="music-progress" value="0" min="0" max="100">
+
+        <div id="music-time">
+          <span id="current-time">0:00</span>
+          <span id="duration">0:00</span>
+        </div>
+
+        <audio id="audio-player"></audio>
+      </div>
+    `);
+  }
+
+  const audio = document.getElementById("audio-player");
+  const player = document.getElementById("music-player");
+  const songTitle = document.getElementById("song-title");
+  const playBtn = document.getElementById("play-btn");
+  const nextBtn = document.getElementById("next-btn");
+  const progressBar = document.getElementById("music-progress");
+  const currentTimeText = document.getElementById("current-time");
+  const durationText = document.getElementById("duration");
+  const minimizeBtn = document.getElementById("music-minimize");
+  const controls = document.getElementById("music-controls");
+  const header = document.getElementById("music-header");
+
+  let currentSong = null;
+  let lastIndex = -1;
+
+  function formatTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  }
+
+  function loadSong(song) {
+    currentSong = song;
+    audio.src = song.file;
+    songTitle.textContent = song.title;
+    audio.load();
+
+    playBtn.textContent = "play";
+    progressBar.value = 0;
+    currentTimeText.textContent = "0:00";
+  }
+
+  function loadRandomSong() {
+    let index;
+
+    do {
+      index = Math.floor(Math.random() * songs.length);
+    } while (songs.length > 1 && index === lastIndex);
+
+    lastIndex = index;
+    loadSong(songs[index]);
+  }
+
+  loadRandomSong();
+
+  playBtn.addEventListener("click", () => {
+    if (audio.paused) {
+      audio.play();
+      playBtn.textContent = "pause";
+    } else {
+      audio.pause();
+      playBtn.textContent = "play";
+    }
+  });
+
+  nextBtn.addEventListener("click", () => {
+    loadRandomSong();
+    audio.play();
+    playBtn.textContent = "pause";
+  });
+
+  audio.addEventListener("ended", () => {
+    loadRandomSong();
+    audio.play();
+  });
+
+  audio.addEventListener("timeupdate", () => {
+    if (!audio.duration) return;
+
+    progressBar.value =
+      (audio.currentTime / audio.duration) * 100;
+
+    currentTimeText.textContent =
+      formatTime(audio.currentTime);
+
+    durationText.textContent =
+      formatTime(audio.duration);
+  });
+
+  progressBar.addEventListener("input", () => {
+    if (!audio.duration) return;
+
+    audio.currentTime =
+      (progressBar.value / 100) * audio.duration;
+  });
+
+  let dragging = false;
+  let offsetX = 0;
+  let offsetY = 0;
+
+  header.addEventListener("mousedown", (e) => {
+    dragging = true;
+    offsetX = e.clientX - player.offsetLeft;
+    offsetY = e.clientY - player.offsetTop;
+  });
+
+  document.addEventListener("mousemove", (e) => {
+    if (!dragging) return;
+
+    let x = e.clientX - offsetX;
+    let y = e.clientY - offsetY;
+
+    const maxX = window.innerWidth - player.offsetWidth;
+    const maxY = window.innerHeight - player.offsetHeight;
+
+    x = Math.max(0, Math.min(x, maxX));
+    y = Math.max(0, Math.min(y, maxY));
+
+    player.style.left = `${x}px`;
+    player.style.top = `${y}px`;
+
+    player.style.right = "auto";
+    player.style.bottom = "auto";
+  });
+
+  document.addEventListener("mouseup", () => {
+    dragging = false;
+  });
+
+  let minimized = false;
+
+  minimizeBtn.addEventListener("click", () => {
+    minimized = !minimized;
+
+    if (minimized) {
+      controls.style.display = "none";
+      progressBar.style.display = "none";
+      document.getElementById("music-time").style.display = "none";
+      minimizeBtn.textContent = "expand";
+    } else {
+      controls.style.display = "flex";
+      progressBar.style.display = "block";
+      document.getElementById("music-time").style.display = "flex";
+      minimizeBtn.textContent = "minimize";
+    }
+  });
+})();(() => {
   // Prevent double-loading entirely
   if (window.__musicPlayerLoaded) return;
   window.__musicPlayerLoaded = true;
